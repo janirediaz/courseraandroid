@@ -4,6 +4,7 @@ import android.test.ActivityInstrumentationTestCase2;
 
 import com.robotium.solo.Solo;
 
+import course.labs.todomanager.R;
 import course.labs.todomanager.ToDoManagerActivity;
 
 public class Test2_DateTimeTest extends ActivityInstrumentationTestCase2<ToDoManagerActivity> {
@@ -43,7 +44,7 @@ public class Test2_DateTimeTest extends ActivityInstrumentationTestCase2<ToDoMan
 		solo.sleep(delay);
 		
 		// Click on Add New ToDo Item
-		solo.clickOnView(solo.getView(course.labs.todomanager.R.id.footerView));
+		solo.clickOnView(solo.getView(R.id.footerView));
 
 		// Wait for activity: 'course.labs.todomanager.AddToDoActivity'
 		assertTrue("DateTimeTest failed:" +
@@ -77,29 +78,6 @@ public class Test2_DateTimeTest extends ActivityInstrumentationTestCase2<ToDoMan
 		// Wait for dialog
 		solo.waitForDialogToOpen(10000);
 		
-		// Enter the text: 'Feb'
-		solo.clearEditText((android.widget.EditText) solo
-				.getView("numberpicker_input"));
-		
-		solo.enterText(
-				(android.widget.EditText) solo.getView("numberpicker_input"),
-				"Feb");
-		
-		// Enter the text: '28'
-		solo.clearEditText((android.widget.EditText) solo.getView(
-				"numberpicker_input", 1));
-		
-		solo.enterText(
-				(android.widget.EditText) solo.getView("numberpicker_input", 1),
-				"28");
-		
-		// Enter the text: '2014'
-		solo.clearEditText((android.widget.EditText) solo.getView(
-				"numberpicker_input", 2));
-		
-		solo.enterText(
-				(android.widget.EditText) solo.getView("numberpicker_input", 2),
-				"2014");
 
 		// Really set the date
 		solo.setDatePicker(0, 2014, 1, 28);
@@ -116,21 +94,7 @@ public class Test2_DateTimeTest extends ActivityInstrumentationTestCase2<ToDoMan
 		// Wait for dialog
 		solo.waitForDialogToOpen(10000);
 		
-		// Enter the text: '9'
-		solo.clearEditText((android.widget.EditText) solo
-				.getView("numberpicker_input"));
-		
-		solo.enterText(
-				(android.widget.EditText) solo.getView("numberpicker_input"),
-				"9");
-		
-		// Enter the text: '19'
-		solo.clearEditText((android.widget.EditText) solo.getView(
-				"numberpicker_input", 1));
-		
-		solo.enterText(
-				(android.widget.EditText) solo.getView("numberpicker_input", 1),
-				"19");
+
 
 		// Really set the time
 		solo.setTimePicker(0, 9, 19);
