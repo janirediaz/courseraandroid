@@ -89,7 +89,14 @@ public class DownloaderTaskFragment extends Fragment {
 				dataArray[i] = data.get(i);
 			}
 			return downloadTweets(dataArray);
+
 		}
+
+			@Override
+			protected void onPostExecute(String[] strings) {
+				mCallback.notifyDataRefreshed(strings);
+			}
+	}
 
 
 // TODO: Uncomment this helper method
@@ -135,5 +142,4 @@ public class DownloaderTaskFragment extends Fragment {
 		}
 
 
-	}
 }
