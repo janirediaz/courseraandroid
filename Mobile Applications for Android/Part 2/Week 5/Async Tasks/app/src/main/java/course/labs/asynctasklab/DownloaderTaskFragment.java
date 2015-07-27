@@ -64,7 +64,7 @@ public class DownloaderTaskFragment extends Fragment {
 
 	// Null out mCallback
 	@Override
-	public void onDetach() {
+	public void onDetach(){
 		super.onDetach();
 		mCallback = null;
 	}
@@ -85,11 +85,10 @@ public class DownloaderTaskFragment extends Fragment {
 
 			ArrayList<Integer> data = arrayLists[0];
 			Integer[] dataArray = new Integer[data.size()];
-			for (int i = 0; i < data.size(); i++) {
+			for (int i = 0; i<data.size(); i++){
 				dataArray[i] = data.get(i);
 			}
 			return downloadTweets(dataArray);
-
 		}
 
 			@Override
