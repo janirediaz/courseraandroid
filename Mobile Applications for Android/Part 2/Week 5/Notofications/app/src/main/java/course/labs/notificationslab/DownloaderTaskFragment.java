@@ -97,7 +97,7 @@ public class DownloaderTaskFragment extends Fragment {
 		// TODO: Uncomment this helper method
 		// Simulates downloading Twitter data from the network
 
-/* 
+
 	 
 	  private String[] downloadTweets(Integer resourceIDS[]) {
 	 
@@ -146,14 +146,12 @@ public class DownloaderTaskFragment extends Fragment {
 
 			return feeds;
 
-		}
-*/
+
 		// Uncomment this helper method.
 		// If necessary, notifies the user that the tweet downloads are
 		// complete. Sends an ordered broadcast back to the BroadcastReceiver in
 		// MainActivity to determine whether the notification is necessary.
 
-	/*
 		private void notify(final boolean success) {
 
 			final Intent restartMainActivityIntent = new Intent(mContext,
@@ -185,20 +183,17 @@ public class DownloaderTaskFragment extends Fragment {
 
 							// TODO: Check whether or not the MainActivity
 							// received the broadcast
+							Log.i(TAG, "Entered result receiver's onReceive() method");
 
-							if (true || false) {
+							if (getResultCode() != Activity.RESULT_OK) {
+
+								final PendingIntent pendingIntent = PendingIntent.getActivity(mApplicationContext, 0, restartMainActivityIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+							}
 
 								// TODO: If not, create a PendingIntent using
 								// the
 								// restartMainActivityIntent and set its flags
 								// to FLAG_UPDATE_CURRENT
-
-
-
-
-
-
-
 
 								// Uses R.layout.custom_notification for the
 								// layout of the notification View. The xml
@@ -211,6 +206,11 @@ public class DownloaderTaskFragment extends Fragment {
 								// TODO: Set the notification View's text to
 								// reflect whether the download completed
 								// successfully
+							if(mContext.length > 0){
+								mContentView.setTextViewText(R.id.text, successMsg);
+							}else{
+								mContentView.setTextViewText(R.id.text, failMsg);
+							}
 
 
 
@@ -231,24 +231,18 @@ public class DownloaderTaskFragment extends Fragment {
 
 
 
-								Toast.makeText(mContext, notificationSentMsg,
-										Toast.LENGTH_LONG).show();
 
-							} else {
-								Toast.makeText(mContext,
-										success ? successMsg : failMsg,
-										Toast.LENGTH_LONG).show();
-							}
 						}
 					}, null, 0, null, null);
-		}
 
-*/
+}
+
+
 	
 		// Uncomment this helper method
 		// Saves the tweets to a file
 	
-/*	
+
 		private void saveTweetsToFile(String[] result) {
 			PrintWriter writer = null;
 			try {
@@ -268,7 +262,7 @@ public class DownloaderTaskFragment extends Fragment {
 				}
 			}
 		}
-*/
+
 
 
 	
