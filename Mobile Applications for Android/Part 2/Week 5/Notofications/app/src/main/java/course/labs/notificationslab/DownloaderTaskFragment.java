@@ -8,10 +8,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.util.ArrayList;
+import java.net.URL;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -19,41 +18,69 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.os.Bundle;
 import android.util.Log;
 import android.widget.RemoteViews;
-import android.widget.Toast;
 
-public class DownloaderTaskFragment extends Fragment {
+public class DownloaderTask extends AsyncTask<String, Void, String[]> {
 
-	private DownloadFinishedListener mCallback;
-	private Context mContext;
+	private static final int SIM_NETWORK_DELAY = 5000;
+	private static final String TAG = "Lab-notifications";
 	private final int MY_NOTIFICATION_ID = 11151990;
+	private String mFeeds[] = new String[3];
+	private MainActivity mParentActivity;
+	private Context mApplicationContext;
 
-	@SuppressWarnings("unused")
-	private static final String TAG = "Lab-Notifications";
 
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+	private static final boolean HAS_NETWORK_CONNECTION = false;
 
-		// Preserve across reconfigurations
-		setRetainInstance(true);
 
 		// TODO: Create new DownloaderTask that "downloads" data
 
-		
 		// TODO: Retrieve arguments from DownloaderTaskFragment
 		// Prepare them for use with DownloaderTask.
 
-
-		
-		
-		
 		// TODO: Start the DownloaderTask
+
+	public static final int txtFeeds[] = { R.raw.tswift, R.raw.rblack, R.raw.lgaga };
+
+	public DownloaderTask(MainActivity ParentActivity){
+		super();
+
+		mParentActivity = parentActivity;
+		mApplicationContext = parentActivity.getApplicationContext();
+	}
+
+	@Override
+	protected String[] doInBackground(String... urlParameters){
+		Log.i(TAG, "Entered doInBackground()");
+		return download(urlParameters);
+	}
+
+	private String[] download(String urlParameters[]){
+		boolean downloadCompleted = false;
+
+		try{
+			for(int idx = 0; idx < urlParameters.length; idx++){
+
+				URL url = new URL(urlParameters[idx]);
+				try{
+					Thread.sleep(SIM_NETWORK_DELAY);
+				}catch (InterruptedException e){
+					e.printStackTrace();
+				}
+
+				InputStream inputStream;
+				BufferedReader in;
+
+		}
+	}
+
+
 
 		
 	}
+
+
 
 	// Assign current hosting Activity to mCallback
 	// Store application context for use by downloadTweets()
