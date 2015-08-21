@@ -257,7 +257,7 @@ public class BubbleActivity extends Activity {
 			if (speedMode == RANDOM) {
 				
 				// TODO - set rotation in range [1..3]
-				mDRotate = 0;
+				mDRotate = r.nextInt(3)+1;
 
 
 			} else {
@@ -290,12 +290,9 @@ public class BubbleActivity extends Activity {
 				// Limit movement speed in the x and y
 				// direction to [-3..3] pixels per movement.
 
+				mDx = r.nextFloat() * 6.0f - 3.0f;
+				mDy = r.nextFloat() * 6.0f - 3.0f;
 
-			
-			
-			
-			
-			
 
 			}
 		}
@@ -307,12 +304,13 @@ public class BubbleActivity extends Activity {
 			
 			} else {
 				//TODO - set scaled bitmap size in range [1..3] * BITMAP_SIZE
-				mScaledBitmapWidth = 0;
+				int rand = r.nextInt(4-1)+1;
+				mScaledBitmapWidth = rand * BITMAP_SIZE;
 			
 			}
 
 			// TODO - create the scaled bitmap using size set above
-			mScaledBitmap = null;
+			mScaledBitmap = Bitmap.createScaledBitmap(mBitmap, mScaledBitmapWidth, mScaledBitmapWidth, true);
 		}
 
 		// Start moving the BubbleView & updating the display
@@ -333,13 +331,14 @@ public class BubbleActivity extends Activity {
 					// Each time this method is run the BubbleView should
 					// move one step. If the BubbleView exits the display, 
 					// stop the BubbleView's Worker Thread. 
-					// Otherwise, request that the BubbleView be redrawn. 
-					
+					// Otherwise, request that the BubbleView be redrawn.
 
-					
-					
-					
-					
+					boolean offScreen = moveWhileOnScreen();
+
+					if(offScreen)
+						stop(false);
+
+					BubbleView.this.postInvalidate();
 
 				}
 			}, 0, REFRESH_RATE, TimeUnit.MILLISECONDS);
@@ -350,12 +349,10 @@ public class BubbleActivity extends Activity {
 
 			// TODO - Return true if the BubbleView intersects position (x,y)
 
+			if( (x > mXPos && x < mXPos + mScaledBitmapWidth) &&
+			(y > mYPos && y < mYPos + mScaledBitmapWidth))
+				return true;
 
-
-
-			
-			
-			
 		    return false;
 		}
 
@@ -375,16 +372,20 @@ public class BubbleActivity extends Activity {
 				public void run() {
 
 					// TODO - Remove the BubbleView from mFrame
-	
-					
+
+					mFrame.removeView(BubbleView.this);
+
+					if (wasPopped){
+						Log.i(TAG, "Pop!");
+
 					// TODO - If the bubble was popped by user,
 					// play the popping sound
-					if (wasPopped) {
-					
-						
-						
+
+						mSoundPool.play(mSoundID, 0.5f, 0.5f, 0, 0, 1.0f);
 
 					}
+
+					Log.i(TAG, "Bubble removed from view!");
 				}
 			});
 		}
@@ -393,11 +394,9 @@ public class BubbleActivity extends Activity {
 		private synchronized void deflect(float velocityX, float velocityY) {
 
 			//TODO - set mDx and mDy to be the new velocities divided by the REFRESH_RATE
-			
 
-
-
-
+			mDx = velocityX/REFRESH_RATE;
+			mDy = velocityY/REFRESH_RATE;
 
 		}
 
@@ -406,28 +405,26 @@ public class BubbleActivity extends Activity {
 		protected synchronized void onDraw(Canvas canvas) {
 
 			// TODO - save the canvas
+			canvas.save();
 
 
-			
 			// TODO - increase the rotation of the original image by mDRotate
+			mRotate += mDRotate;
 
 
-
-			
 			// TODO Rotate the canvas by current rotation
 			// Hint - Rotate around the bubble's center, not its position
+			canvas.rotate((float) mRotate, mXPos + (mScaledBitmapWidth / 2), mYPos + (mScaledBitmapWidth / 2));
 
 
-
-			
 			// TODO - draw the bitmap at its new location
+			canvas.drawBitmap(mScaledBitmap, mXPos, mYPos, mPainter);
 			
 
 			
 			// TODO - restore the canvas
+			canvas.restore();
 
-
-			
 		}
 
 		// Returns true if the BubbleView is still on the screen after the move
@@ -435,9 +432,11 @@ public class BubbleActivity extends Activity {
 		private synchronized boolean moveWhileOnScreen() {
 
 			// TODO - Move the BubbleView
+			mXPos += mDx;
+			mYPos += mDy;
 
 
-			return false;
+			return isOutOfView();
 		}
 
 		// Return true if the BubbleView is off the screen after the move
@@ -446,7 +445,9 @@ public class BubbleActivity extends Activity {
 
 			// TODO - Return true if the BubbleView is off the screen after
 			// the move operation
-
+			if(mXPos > mDisplayWidth || mXPos + mScaledBitmapWidth < 0 || mYPos > mDisplayHeight ||
+					mYPos + mScaledBitmapWidth < 0)
+				return true;
 
 			return false;
 		}
