@@ -1,0 +1,19 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/delete_badges"
+        android:title="@string/delete"/>
+    
+     <item
+		android:id="@+id/place_one"
+        android:title="@string/place_one"/>
+    
+    <item
+		android:id="@+id/place_no_country"
+        android:title="@string/place_no_country"/>
+    
+    <item
+		android:id="@+id/place_two"
+        android:title="@string/place_two"/>
+</menu>
+<!-- From: file:/C:/Users/Hector/Desktop/janire/CursoAndroid/git/courseraandroid/Mobile%20Applications%20for%20Android/Part%202/Week%208/Location/app/src/main/res/menu/main.xml -->

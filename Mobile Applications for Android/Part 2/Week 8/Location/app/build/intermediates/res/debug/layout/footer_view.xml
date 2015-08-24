@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/footer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:text="@string/footer_text"
+    android:textSize="20sp" />
+<!-- From: file:/C:/Users/Hector/Desktop/janire/CursoAndroid/git/courseraandroid/Mobile%20Applications%20for%20Android/Part%202/Week%208/Location/app/src/main/res/layout/footer_view.xml -->
