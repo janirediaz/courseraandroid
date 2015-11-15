@@ -16,7 +16,7 @@ public class TestNoCountryLocation extends
 
 	public void setUp() throws Exception {
 		solo = new Solo(getInstrumentation(), getActivity());
-		PlaceViewActivity.sHasNetwork = false;
+		PlaceViewActivity.L = false;
 	}
 
 	@Override

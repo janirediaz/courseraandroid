@@ -31,16 +31,17 @@ import android.util.Log;
 public class PlaceDownloaderTask extends AsyncTask<Location, Void, PlaceRecord> {
 
 	// Change to false if you don't have network access
-	private static final boolean HAS_NETWORK = false;
+	private static final boolean HAS_NETWORK = true;
 
-	// DONE - put your www.geonames.org account name here.
-	private static String USERNAME = "Janire";
+	// TODO - put your www.geonames.org account name here.
+	private static String USERNAME = "charlires";
 
 	private HttpURLConnection mHttpUrl;
 	private WeakReference<PlaceViewActivity> mParent;
 	private static Bitmap mStubBitmap;
 	private static Location mockLoc1 = new Location(LocationManager.NETWORK_PROVIDER);
 	private static Location mockLoc2 = new Location(LocationManager.NETWORK_PROVIDER);
+
 
 
 	public PlaceDownloaderTask(PlaceViewActivity parent) {

@@ -1,0 +1,1168 @@
+1
+00:00:00,540 --> 00:00:04,810
+So the second part of the Java
+built-in monitor object lecture
+
+2
+00:00:04,810 --> 00:00:06,740
+will go a little further and
+
+3
+00:00:06,740 --> 00:00:12,060
+focus on the coordination aspects that
+are provided by Java monitor objects.
+
+4
+00:00:12,060 --> 00:00:17,760
+In particular, we'll talk specifically
+about the notify and wait mechanisms.
+
+5
+00:00:17,760 --> 00:00:19,580
+So there's a couple pieces to this.
+
+6
+00:00:21,310 --> 00:00:24,720
+If you recall our earlier discussion,
+Java synchronized methods and
+
+7
+00:00:24,720 --> 00:00:27,890
+synchronized statements only
+provide a partial solution.
+
+8
+00:00:29,510 --> 00:00:33,563
+And to avoid this, there are some
+additional features that are provided that
+
+9
+00:00:33,563 --> 00:00:35,810
+help to coordinate interactions, and
+
+10
+00:00:35,810 --> 00:00:39,880
+these are the wait, notify,
+and notifyAll methods.
+
+11
+00:00:39,880 --> 00:00:43,270
+These methods are defined
+on Java object itself.
+
+12
+00:00:45,000 --> 00:00:49,660
+Wait is used to cause the current thread
+to wait until another thread invokes
+
+13
+00:00:49,660 --> 00:00:52,200
+the notify method or
+the notifyAll method for an object.
+
+14
+00:00:53,680 --> 00:00:58,636
+Notify is used to wake up a single
+thread that's waiting on the monitor.
+
+15
+00:00:58,636 --> 00:01:01,610
+And notifyAll is used to wake up
+all the threads that are waiting
+
+16
+00:01:01,610 --> 00:01:02,780
+on the object's monitor.
+
+17
+00:01:02,780 --> 00:01:05,130
+So this wakes up one, this wakes up all.
+
+18
+00:01:05,130 --> 00:01:07,780
+And we'll talk later about why you
+would use one versus the other.
+
+19
+00:01:09,510 --> 00:01:12,120
+Each Java monitor object has
+an entrance queue and a wait queue.
+
+20
+00:01:12,120 --> 00:01:13,470
+I talked about this before.
+
+21
+00:01:13,470 --> 00:01:15,890
+You can read about this
+in the Wikipedia links.
+
+22
+00:01:16,900 --> 00:01:21,440
+And so when you go into a monitor object,
+you initially start out in the entrance
+
+23
+00:01:21,440 --> 00:01:24,030
+queue if there's other threads
+that are there waiting.
+
+24
+00:01:24,030 --> 00:01:29,080
+And while you're running,
+you can decide to wait, in which case
+
+25
+00:01:29,080 --> 00:01:33,910
+you temporarily step outside
+of the critical section and
+
+26
+00:01:33,910 --> 00:01:38,990
+you wait on the wait queue for your chance
+to go back in to the critical section.
+
+27
+00:01:40,620 --> 00:01:44,320
+So, we use the entrance queue
+to serialize thread access
+
+28
+00:01:44,320 --> 00:01:46,920
+to the monitor object's critical section.
+
+29
+00:01:46,920 --> 00:01:49,100
+And any time you call wait,
+that's done on the wait queue.
+
+30
+00:01:49,100 --> 00:01:55,860
+When you call notify or notifyAll on
+an object, that also applies to the wait
+
+31
+00:01:55,860 --> 00:02:01,040
+queue by waking up one or all threads
+that are currently waiting on that queue.
+
+32
+00:02:02,560 --> 00:02:03,780
+So here's some simple examples.
+
+33
+00:02:03,780 --> 00:02:07,060
+This is now, now we have a new
+class called SimpleBlockingQueue.
+
+34
+00:02:07,060 --> 00:02:11,610
+And SimpleBlockingQueue is going to fix
+the problems we had with the earlier
+
+35
+00:02:11,610 --> 00:02:19,310
+implementation that was either the buggy
+queue or the busy synchronized queue.
+
+36
+00:02:19,310 --> 00:02:23,920
+So what's going to happen here is whenever
+you call put, we're going to go ahead and
+
+37
+00:02:23,920 --> 00:02:26,110
+check to see if the queue is full.
+
+38
+00:02:26,110 --> 00:02:30,850
+If the queue is full, we're going to
+wait for the queue to be not full.
+
+39
+00:02:30,850 --> 00:02:34,260
+So that's a way to put ourselves to sleep
+when we can't make forward progress.
+
+40
+00:02:35,650 --> 00:02:40,220
+When wait is called, and this is very
+important, it atomically releases
+
+41
+00:02:40,220 --> 00:02:44,690
+the intrinsic lock, which was acquired
+because this was a synchronized method,
+
+42
+00:02:44,690 --> 00:02:48,770
+and then it goes ahead and
+sleeps on the object's wait queue.
+
+43
+00:02:48,770 --> 00:02:51,820
+So the object that's an instance
+of simple blocking queue,
+
+44
+00:02:51,820 --> 00:02:57,140
+this wait call will release the lock and
+then go to sleep on the wait queue.
+
+45
+00:02:57,140 --> 00:02:59,330
+This implements what's called
+the guarded suspension pattern,
+
+46
+00:02:59,330 --> 00:03:00,780
+and we'll talk more about that later.
+
+47
+00:03:03,500 --> 00:03:08,070
+When we finally get a chance to go ahead
+because the queue is no longer full,
+
+48
+00:03:08,070 --> 00:03:12,140
+we add an item to the queue and
+then we go ahead and we notify
+
+49
+00:03:12,140 --> 00:03:17,010
+anybody who's waiting that the queue
+is no longer going to be empty.
+
+50
+00:03:17,010 --> 00:03:20,690
+So this is a way to notify everybody that
+there's something changed in the queue.
+
+51
+00:03:21,890 --> 00:03:24,420
+And that'll wake up all of the threads
+that are blocked on the weight q.
+
+52
+00:03:24,420 --> 00:03:27,450
+Now this actually turns out to
+be somewhat problematic for
+
+53
+00:03:27,450 --> 00:03:30,120
+a variety of reasons having
+to do with performance.
+
+54
+00:03:30,120 --> 00:03:33,360
+But that's why Java also supports
+something called condition
+
+55
+00:03:33,360 --> 00:03:36,350
+objects which we wont talk
+much about in this MOOC,
+
+56
+00:03:36,350 --> 00:03:39,600
+but is available in other
+videos on my website.
+
+57
+00:03:41,270 --> 00:03:42,725
+We'll talk more about quit and take later.
+
+58
+00:03:42,725 --> 00:03:45,060
+Okay.
+
+59
+00:03:45,060 --> 00:03:47,370
+So that's the basic mechanism.
+
+60
+00:03:47,370 --> 00:03:53,350
+Under the hood, these monitor objects
+are implemented using POSIX mechanisms.
+
+61
+00:03:53,350 --> 00:03:56,350
+POSIX is the portable operating system for
+
+62
+00:03:56,350 --> 00:04:01,050
+UNIX that defines a standard way
+of interacting with hardware in
+
+63
+00:04:01,050 --> 00:04:05,150
+operating systems like SOLARIS,
+or Linux, implement POSIX.
+
+64
+00:04:06,340 --> 00:04:13,550
+And so the entrance queue into a monitor
+object is implemented in Android and
+
+65
+00:04:13,550 --> 00:04:18,060
+in most Java implementations with
+something called a POSIX mutex,
+
+66
+00:04:18,060 --> 00:04:23,360
+which is a mutual exclusion lock that
+supports recursive locking semantics.
+
+67
+00:04:24,460 --> 00:04:25,960
+And you can read more about mutexes here.
+
+68
+00:04:27,000 --> 00:04:30,780
+Likewise, wait queues can be
+implemented with something called POSIX
+
+69
+00:04:30,780 --> 00:04:31,640
+condition variables.
+
+70
+00:04:33,160 --> 00:04:34,636
+And you can read more about them there.
+
+71
+00:04:34,636 --> 00:04:39,990
+They basically allow multiple
+threads to queue up waiting for
+
+72
+00:04:39,990 --> 00:04:44,740
+a chance to access some
+resource that's controlled
+
+73
+00:04:44,740 --> 00:04:48,670
+via a condition expression using
+the guarded suspension pattern.
+
+74
+00:04:50,460 --> 00:04:52,140
+And they're very similar
+to Java ConditionObjects.
+
+75
+00:04:52,140 --> 00:04:53,650
+We'll talk about them a little bit later,
+
+76
+00:04:53,650 --> 00:04:58,380
+but they're better found other
+places besides this MOOC.
+
+77
+00:04:58,380 --> 00:05:00,110
+Okay.
+Let's take a look now at how the simple
+
+78
+00:05:00,110 --> 00:05:01,480
+blocking queue example works.
+
+79
+00:05:01,480 --> 00:05:04,034
+We're going to look at it first
+from a visual point of view,
+
+80
+00:05:04,034 --> 00:05:05,960
+then we're going to look
+at the source code.
+
+81
+00:05:05,960 --> 00:05:07,563
+So, first we're going to take a look,
+
+82
+00:05:07,563 --> 00:05:09,993
+you can see that the source
+code is here at this link, and
+
+83
+00:05:09,993 --> 00:05:13,020
+we're going to zoom in and kind of look
+at how it's going to work visually.
+
+84
+00:05:14,330 --> 00:05:17,248
+We're going to have a queue of threads
+that can block on the monitor locks
+
+85
+00:05:17,248 --> 00:05:18,138
+entrance queue, and
+
+86
+00:05:18,138 --> 00:05:21,370
+another queue of threads that can wait
+on the monitor conditions wait queue.
+
+87
+00:05:22,840 --> 00:05:24,360
+So let's take a look.
+
+88
+00:05:24,360 --> 00:05:28,930
+Let's say we have the situation
+where we're going to try to take
+
+89
+00:05:30,070 --> 00:05:31,720
+an element out of the queue.
+
+90
+00:05:31,720 --> 00:05:35,280
+And let's say for sake of argument
+that the queue is empty to begin with.
+
+91
+00:05:35,280 --> 00:05:39,060
+So, somebody calls take,
+that causes the monitor object
+
+92
+00:05:40,060 --> 00:05:44,050
+to go into the region up
+here by the entrance queue.
+
+93
+00:05:45,130 --> 00:05:48,580
+Since there's nobody else there,
+we acquire the lock.
+
+94
+00:05:48,580 --> 00:05:53,420
+That thread is now running in the critical
+section of the simple blocking
+
+95
+00:05:53,420 --> 00:05:54,910
+queue object.
+
+96
+00:05:56,000 --> 00:05:59,510
+And then it goes and it checks to see
+whether or not the list is empty.
+
+97
+00:05:59,510 --> 00:06:03,450
+Because the list is empty, we're going to
+assume that it's going to have to block.
+
+98
+00:06:03,450 --> 00:06:04,300
+So it's cause wait.
+
+99
+00:06:05,300 --> 00:06:10,930
+And then that causes it to atomically
+release the intrinsic lock and
+
+100
+00:06:10,930 --> 00:06:13,460
+then go block on the monitor conditions.
+
+101
+00:06:13,460 --> 00:06:17,310
+So this thread is now over here blocked,
+it's stepped outside the critical section
+
+102
+00:06:17,310 --> 00:06:21,170
+and it's waiting to re-enter
+the critical section when it's notified.
+
+103
+00:06:22,570 --> 00:06:25,760
+Now, another thread comes along,
+thread T2.
+
+104
+00:06:25,760 --> 00:06:29,020
+And this thread is going to be
+putting stuff into the queue.
+
+105
+00:06:29,020 --> 00:06:30,590
+So, it's going to be putting something in.
+
+106
+00:06:30,590 --> 00:06:32,810
+So, it comes in,
+it enters the monitor object,
+
+107
+00:06:32,810 --> 00:06:36,312
+there's nobody else there,
+it acquires the monitor intrinsic lock and
+
+108
+00:06:36,312 --> 00:06:41,430
+it goes ahead and it adds an item to
+the queue and then it calls notifyAll.
+
+109
+00:06:41,430 --> 00:06:42,770
+And notifyAll, as we'll see in a second,
+
+110
+00:06:42,770 --> 00:06:45,960
+is going to wake up this
+waiting thread over here, T1.
+
+111
+00:06:45,960 --> 00:06:52,370
+So after it notifies, it then releases
+the lock and it exits the monitor object.
+
+112
+00:06:52,370 --> 00:06:57,830
+At that point, because it notified
+thread T1, T1 wakes up and
+
+113
+00:06:57,830 --> 00:07:02,840
+it unblocks on the monitor condition, and
+then it goes and it tries to re-enter
+
+114
+00:07:02,840 --> 00:07:06,910
+the critical section which is protected by
+the entrance queue and the intrinsic lock.
+
+115
+00:07:08,030 --> 00:07:10,010
+If there was something else already there,
+it would have to wait.
+
+116
+00:07:10,010 --> 00:07:12,561
+If there's nothing else there,
+it can re-acquire the lock,
+
+117
+00:07:12,561 --> 00:07:14,490
+re-enter the critical section.
+
+118
+00:07:14,490 --> 00:07:18,590
+And now it'll decide, it'll detect that
+the queue has actually got an element
+
+119
+00:07:18,590 --> 00:07:22,500
+in it, and so it will be able to
+remove the element from the queue, and
+
+120
+00:07:22,500 --> 00:07:27,150
+then return and release the lock and
+exit the monitor object.
+
+121
+00:07:27,150 --> 00:07:28,860
+So those are the basic steps
+that are going on there.
+
+122
+00:07:30,570 --> 00:07:33,120
+Here's the same thing, except we're
+going to look at this from a code
+
+123
+00:07:33,120 --> 00:07:36,190
+perspective as opposed to
+a visualization perspective.
+
+124
+00:07:36,190 --> 00:07:39,210
+Once again,
+you can grab the implementation here,
+
+125
+00:07:39,210 --> 00:07:41,970
+there's a couple different
+places you can get it.
+
+126
+00:07:41,970 --> 00:07:44,600
+We have an internal state that has to
+be protected against race conditions.
+
+127
+00:07:44,600 --> 00:07:47,310
+The constructor sets that state.
+
+128
+00:07:47,310 --> 00:07:50,840
+We could make this,
+these could be final if we wanted to.
+
+129
+00:07:51,960 --> 00:07:55,990
+And then, the thread can wait for
+a condition in a synchronized methods.
+
+130
+00:07:55,990 --> 00:07:59,300
+So here is the synchronized
+method called take,
+
+131
+00:07:59,300 --> 00:08:03,420
+and this uses the guarded
+suspension pattern.
+
+132
+00:08:03,420 --> 00:08:07,650
+Take is going to acquire the monitor
+lock and wait while the queue is empty.
+
+133
+00:08:07,650 --> 00:08:11,640
+So, it comes in here,
+it gets the intrinsic lock, and
+
+134
+00:08:11,640 --> 00:08:13,536
+it checks to see if the queue is empty or
+not.
+
+135
+00:08:13,536 --> 00:08:18,480
+Let's say for the sake of argument
+the queue is empty, we then have to wait.
+
+136
+00:08:18,480 --> 00:08:23,280
+Wait will atomically release the lock and
+go to sleep.
+
+137
+00:08:23,280 --> 00:08:29,100
+You almost always, not always, but almost
+always, want to call wait in a loop.
+
+138
+00:08:29,100 --> 00:08:32,890
+And that's because when you're awakened,
+when somebody notifies you,
+
+139
+00:08:32,890 --> 00:08:36,670
+the condition you're waiting on may or
+may not be true.
+
+140
+00:08:36,670 --> 00:08:38,870
+So you always have to re-check it.
+
+141
+00:08:38,870 --> 00:08:43,740
+When wait returns, it automatically
+acquires the intrinsic lock.
+
+142
+00:08:43,740 --> 00:08:45,670
+And therefore,
+whenever you check this condition,
+
+143
+00:08:45,670 --> 00:08:49,960
+this condition is always checked with
+the lock held, the intrinsic lock held.
+
+144
+00:08:51,530 --> 00:08:54,970
+So the waiting thread can't assume that
+the notification it receives is for
+
+145
+00:08:54,970 --> 00:08:56,500
+its condition, so it has to do the check.
+
+146
+00:08:58,260 --> 00:09:01,270
+You can read more about these
+situations in the cases here.
+
+147
+00:09:04,393 --> 00:09:07,741
+The thread that's blocking in wait won't
+continue until another thread notifies it
+
+148
+00:09:07,741 --> 00:09:09,005
+that the condition may be true.
+
+149
+00:09:09,005 --> 00:09:11,255
+So here's an example of
+where that would happen.
+
+150
+00:09:11,255 --> 00:09:12,455
+So, here's take.
+
+151
+00:09:12,455 --> 00:09:13,795
+Now we're in put.
+
+152
+00:09:13,795 --> 00:09:17,710
+In put you can see that we've
+blocked while the queue is full.
+
+153
+00:09:17,710 --> 00:09:21,460
+And we check to see whether something's
+full by checking the capacity.
+
+154
+00:09:21,460 --> 00:09:23,840
+And if it's not full,
+we add the message and we notify.
+
+155
+00:09:23,840 --> 00:09:29,410
+So that call to notify here
+will then notify everybody.
+
+156
+00:09:29,410 --> 00:09:34,550
+Now, this is actually a limitation from
+Java monitor objects which have the weird
+
+157
+00:09:34,550 --> 00:09:41,200
+quirk that there's only one monitor
+condition for each monitor object.
+
+158
+00:09:41,200 --> 00:09:44,560
+That's the reason why Java also supports
+something called condition object
+
+159
+00:09:44,560 --> 00:09:48,130
+which we'll briefly mention later, but are
+really outside the scope of this class.
+
+160
+00:09:50,000 --> 00:09:55,037
+So, once notifyAll is called, that will
+cause the thread that's blocked in wait
+
+161
+00:09:55,037 --> 00:10:00,170
+to wake up, and it'll re-acquire the lock,
+re-evaluate the condition.
+
+162
+00:10:00,170 --> 00:10:04,790
+And then it'll go ahead and continue,
+and it'll remove the item from the list.
+
+163
+00:10:04,790 --> 00:10:09,820
+And it will call notifyAll to let anybody
+know that the queue is no longer full.
+
+164
+00:10:11,140 --> 00:10:12,580
+And it releases the lock when it returns.
+
+165
+00:10:14,180 --> 00:10:15,040
+Those are the basic steps.
+
+166
+00:10:15,040 --> 00:10:18,760
+That's just showing you how you
+typically program this kind of code.
+
+167
+00:10:18,760 --> 00:10:21,880
+It's very stylistic or idiomatic.
+
+168
+00:10:21,880 --> 00:10:24,200
+It always looks pretty much the same.
+
+169
+00:10:24,200 --> 00:10:27,740
+And the other thing to note
+is that people typically
+
+170
+00:10:27,740 --> 00:10:31,280
+don't program to this
+type of code directly.
+
+171
+00:10:31,280 --> 00:10:33,580
+They build library interfaces,
+or frameworks,
+
+172
+00:10:33,580 --> 00:10:37,470
+to encapsulate the complexities of
+programming at this level of abstraction.
+
+173
+00:10:37,470 --> 00:10:40,940
+So, I'm just showing you how it works
+under the hood so you'll be aware of it.
+
+174
+00:10:40,940 --> 00:10:45,810
+But in practice you may not program
+this level very much because you would
+
+175
+00:10:45,810 --> 00:10:50,250
+want to build abstractions that shield
+developers from these complexities.
+
+176
+00:10:50,250 --> 00:10:52,480
+So let's talk about some of the traps and
+
+177
+00:10:52,480 --> 00:10:55,190
+pitfalls of using Java
+built in monitor objects.
+
+178
+00:10:55,190 --> 00:10:57,660
+There's a bunch of things you have
+to be aware of to use them properly.
+
+179
+00:10:58,840 --> 00:10:59,610
+As I mentioned before,
+
+180
+00:10:59,610 --> 00:11:02,890
+there's only one wait queue and
+one entrance queue per monitor object.
+
+181
+00:11:04,060 --> 00:11:08,010
+And you can read about the problems with
+this in a paper I wrote many years ago.
+
+182
+00:11:08,010 --> 00:11:12,630
+The big problem is something
+called nested monitor lockout.
+
+183
+00:11:12,630 --> 00:11:16,640
+Nested monitor lockout occurs
+because the outermost method
+
+184
+00:11:17,800 --> 00:11:20,420
+will aquire the intrinsic lock.
+
+185
+00:11:20,420 --> 00:11:25,746
+And then if you call into a nested object,
+
+186
+00:11:25,746 --> 00:11:29,520
+that intrinsic lock will still be held and
+
+187
+00:11:29,520 --> 00:11:33,490
+therefore other methods to try to call on
+the class will not be able to access them.
+
+188
+00:11:33,490 --> 00:11:38,020
+So, that can lead to tricky problems
+that are described in this tutorial that
+
+189
+00:11:38,020 --> 00:11:38,910
+are worth knowing about.
+
+190
+00:11:38,910 --> 00:11:42,090
+You have to be very,
+very careful with nested monitor lockout.
+
+191
+00:11:42,090 --> 00:11:43,170
+The Java monitor objects.
+
+192
+00:11:44,830 --> 00:11:48,350
+Then, there is also the fact
+that monitor locks lack certain
+
+193
+00:11:48,350 --> 00:11:50,332
+features that are provided
+by ReentrantLock.
+
+194
+00:11:50,332 --> 00:11:53,220
+So there's another class in
+Java called a ReentrantLock
+
+195
+00:11:53,220 --> 00:11:54,440
+which gives you more features.
+
+196
+00:11:54,440 --> 00:11:58,830
+For example,
+its supports conditional locking,
+
+197
+00:11:58,830 --> 00:12:04,330
+timed conditional locking, and the ability
+to lock in a way that's interruptible.
+
+198
+00:12:04,330 --> 00:12:08,560
+Whereas the built-in synchronized
+methods and synchronized statements
+
+199
+00:12:08,560 --> 00:12:11,740
+are not interruptible and
+cannot be acquired conditionally.
+
+200
+00:12:11,740 --> 00:12:15,130
+So those are some lacks of
+features in the built-in stuff.
+
+201
+00:12:15,130 --> 00:12:18,030
+And Java ReentrantLock adds
+that additional capability.
+
+202
+00:12:19,770 --> 00:12:21,350
+And some other problems.
+
+203
+00:12:21,350 --> 00:12:24,790
+There's some subtleties associated
+with using notify versus notifyAll.
+
+204
+00:12:26,250 --> 00:12:30,250
+There's a good set of discussions here
+on this stack overflow article that
+
+205
+00:12:30,250 --> 00:12:33,530
+talk about the trade offs
+between the two methods.
+
+206
+00:12:33,530 --> 00:12:38,440
+As a general rule, you can only
+use notify in certain situations.
+
+207
+00:12:38,440 --> 00:12:42,470
+And those situations are in situations
+where there's uniform waiters,
+
+208
+00:12:42,470 --> 00:12:46,430
+that means all waiters always are waiting
+for the same condition expression.
+
+209
+00:12:47,730 --> 00:12:51,740
+And the reason for this is there's
+only one condition per wait cue.
+
+210
+00:12:51,740 --> 00:12:56,560
+And the other thing is, you could
+only do this if each thread executes
+
+211
+00:12:56,560 --> 00:12:58,970
+the same logic after the wait returns.
+
+212
+00:13:01,420 --> 00:13:06,040
+So, as a result, if you used monitor
+objects and built-in monitor objects
+
+213
+00:13:06,040 --> 00:13:10,060
+in Java, then you typically have to use
+notify all because oftentimes they wait on
+
+214
+00:13:10,060 --> 00:13:15,960
+multiple conditions such as the queue
+being empty and the queue being full.
+
+215
+00:13:15,960 --> 00:13:18,920
+There's also some fairness
+issues related to the order
+
+216
+00:13:18,920 --> 00:13:20,550
+in which threads are notified.
+
+217
+00:13:20,550 --> 00:13:27,330
+By default, the semantics of Java
+are so-called haphazard notification.
+
+218
+00:13:27,330 --> 00:13:31,430
+And so, to avoid haphazard notification
+you can apply the specific notification
+
+219
+00:13:31,430 --> 00:13:36,050
+pattern, which you can read about
+here at this link on my website,
+
+220
+00:13:36,050 --> 00:13:40,310
+which is a paper that describes how
+to do specific notification in Java.
+
+221
+00:13:43,120 --> 00:13:47,540
+Basically, specific notification
+allows you to have the implementation
+
+222
+00:13:47,540 --> 00:13:51,570
+choose which thread to run
+based on certain properties,
+
+223
+00:13:51,570 --> 00:13:54,570
+like how long it's been in the queue or
+its priority, etc.
+
+224
+00:13:56,450 --> 00:13:59,760
+As a rule of thumb,
+the built-in Java monitor object
+
+225
+00:13:59,760 --> 00:14:04,340
+mechanisms we talked about are very
+popular and efficient and common.
+
+226
+00:14:04,340 --> 00:14:07,300
+But if you do really
+sophisticated concurrency control
+
+227
+00:14:07,300 --> 00:14:08,740
+you're going to need more.
+
+228
+00:14:08,740 --> 00:14:13,925
+And so you really need to understand Java
+util concurrent and java util concurrent
+
+229
+00:14:13,925 --> 00:14:18,670
+locks, which is a bit outside the scope
+of this MOOC, but if you're just doing
+
+230
+00:14:18,670 --> 00:14:23,460
+android programming, what we've covered
+here so far is probably sufficient.
+
+231
+00:14:23,460 --> 00:14:27,880
+If you're doing Java programming,
+especially Java server-side programming,
+
+232
+00:14:27,880 --> 00:14:30,030
+then you really need to understand
+these more powerful mechanisms.
+
+233
+00:14:32,660 --> 00:14:35,070
+Android provides a whole bunch
+of concurrency frameworks,
+
+234
+00:14:35,070 --> 00:14:37,408
+which we're going to talk
+about starting next week,
+
+235
+00:14:37,408 --> 00:14:43,390
+which overcome the limitations
+with these low-level Java
+
+236
+00:14:43,390 --> 00:14:48,050
+mechanisms when applied in the context
+of the Android development environment.
+
+237
+00:14:48,050 --> 00:14:50,554
+And so we'll see that there's a couple
+of different frameworks we're going to
+
+238
+00:14:50,554 --> 00:14:51,205
+talk about later.
+
+239
+00:14:51,205 --> 00:14:54,720
+There's something that's
+called the handlers, messages,
+
+240
+00:14:54,720 --> 00:14:56,800
+and runnables framework,
+or the hammer framework.
+
+241
+00:14:56,800 --> 00:15:00,500
+And there's also something
+called the async task framework.
+
+242
+00:15:00,500 --> 00:15:04,080
+And both of those topics will be
+covered beginning in week two.
+
+243
+00:15:04,080 --> 00:15:07,760
+If you want to know a bit more about
+those topics feel free to go ahead and
+
+244
+00:15:07,760 --> 00:15:15,180
+watch the material that's available on
+the pre-recorded, supplemental lectures.
+

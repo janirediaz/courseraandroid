@@ -1,0 +1,2174 @@
+1
+00:00:00,720 --> 00:00:03,850
+So today we're going to
+talk about Java semaphores.
+
+2
+00:00:03,850 --> 00:00:06,910
+And we're going to talk about
+the structure and functionality of
+
+3
+00:00:06,910 --> 00:00:13,100
+the semaphores and show some examples
+of how they can be applied in practice.
+
+4
+00:00:13,100 --> 00:00:18,070
+So the first thing that we'll
+talk about is, explain how Java
+
+5
+00:00:18,070 --> 00:00:22,250
+semaphores can enable multiple threads
+through a couple of different things.
+
+6
+00:00:22,250 --> 00:00:26,180
+Number one, immediate access to
+a limited number of shared resources,
+
+7
+00:00:26,180 --> 00:00:28,210
+that's one way they're used, and
+
+8
+00:00:28,210 --> 00:00:32,370
+another way they're used is to coordinate
+the order in which operations occur.
+
+9
+00:00:34,420 --> 00:00:41,200
+So a semaphore can be viewed as a
+mechanism for atomically incrementing and
+
+10
+00:00:41,200 --> 00:00:47,140
+decrementing an integer count to
+control access to a shared resource.
+
+11
+00:00:48,530 --> 00:00:52,460
+The terminology itself came from
+
+12
+00:00:52,460 --> 00:00:57,250
+signaling mechanisms that were used for
+ships and railroads and so on.
+
+13
+00:00:57,250 --> 00:01:02,310
+And in particular, semaphores are used to
+control access to a shared railroad track.
+
+14
+00:01:03,410 --> 00:01:07,160
+So if you live in countries that
+have railroads that are widely used,
+
+15
+00:01:07,160 --> 00:01:10,990
+you know that it's sometimes necessary
+to single-track the trains for
+
+16
+00:01:10,990 --> 00:01:12,210
+various reasons.
+
+17
+00:01:12,210 --> 00:01:16,770
+And semaphores are used in order to
+control access to that track by multiple
+
+18
+00:01:16,770 --> 00:01:18,370
+trains so
+they don't interfere with each other.
+
+19
+00:01:19,950 --> 00:01:24,220
+In the software world,
+we use semaphores to control access and
+
+20
+00:01:24,220 --> 00:01:26,940
+mediate the interactions
+between multiple threads.
+
+21
+00:01:28,600 --> 00:01:33,070
+So, for example,
+you might have a resource pool
+
+22
+00:01:33,070 --> 00:01:37,500
+where you wanted to gauge or provide
+access to a limited number of threads,
+
+23
+00:01:37,500 --> 00:01:41,690
+even though there might actually be
+multiple threads that are able to run.
+
+24
+00:01:41,690 --> 00:01:44,130
+So you might say,
+we'll give a semaphore with a kind of two,
+
+25
+00:01:44,130 --> 00:01:48,680
+and we'll have a whole pool of threads try
+to access whatever resource is protected
+
+26
+00:01:48,680 --> 00:01:53,850
+by the semaphore, and
+as long as the count is greater than zero,
+
+27
+00:01:53,850 --> 00:01:58,030
+then a thread can acquire a semaphore and
+do its thing.
+
+28
+00:01:58,030 --> 00:02:01,250
+But when the count drops to zero, then any
+other threads are going to have to wait.
+
+29
+00:02:01,250 --> 00:02:02,200
+They're going to be blocked.
+
+30
+00:02:02,200 --> 00:02:04,360
+And we'll see some
+examples of this shortly.
+
+31
+00:02:05,560 --> 00:02:07,786
+There are a couple of
+different types of semaphores.
+
+32
+00:02:07,786 --> 00:02:10,750
+There's so-called counting semaphores,
+
+33
+00:02:10,750 --> 00:02:14,670
+which have a number of states that
+are defined by a counter variable.
+
+34
+00:02:14,670 --> 00:02:18,045
+Sometimes these states
+are referred to as permits.
+
+35
+00:02:18,045 --> 00:02:20,485
+And this counter variable
+has a precise meaning.
+
+36
+00:02:20,485 --> 00:02:25,205
+So if the count of states or
+the permits is negative,
+
+37
+00:02:25,205 --> 00:02:30,415
+then that many threads are queued
+waiting to acquire the semaphore.
+
+38
+00:02:30,415 --> 00:02:33,855
+If the count is zero,
+that means there's no waiting threads, and
+
+39
+00:02:33,855 --> 00:02:36,065
+an acquire operation would
+be put in the queue and
+
+40
+00:02:36,065 --> 00:02:41,010
+blocked until the counter of
+the permits or states is positive.
+
+41
+00:02:41,010 --> 00:02:45,630
+And finally, if the value of the semaphore
+is positive, then there are no waiting
+
+42
+00:02:45,630 --> 00:02:49,330
+threads, and an acquire operation
+will not block the invoking thread.
+
+43
+00:02:49,330 --> 00:02:54,130
+So those are the three main categories
+of states for counting semaphores.
+
+44
+00:02:55,310 --> 00:02:57,400
+Then there's also something
+called binary semaphores,
+
+45
+00:02:57,400 --> 00:02:59,770
+which are basically either all or nothing.
+
+46
+00:02:59,770 --> 00:03:04,280
+They have two states only,
+acquired and not acquired.
+
+47
+00:03:04,280 --> 00:03:07,370
+And that restricts the counter
+to the values zero or one.
+
+48
+00:03:07,370 --> 00:03:09,850
+Now, it turns out in practice, of course,
+
+49
+00:03:09,850 --> 00:03:14,120
+that you can typically emulate a binary
+semaphore with a counting semaphore
+
+50
+00:03:14,120 --> 00:03:17,810
+just by constraining its values
+to be zero or one by convention.
+
+51
+00:03:19,280 --> 00:03:22,110
+We're going to show examples
+of both counting and
+
+52
+00:03:22,110 --> 00:03:24,590
+binary semaphores in later videos.
+
+53
+00:03:24,590 --> 00:03:29,400
+One thing we'll take a look at is we'll
+take a look at this Palantir, Palantir
+
+54
+00:03:29,400 --> 00:03:32,710
+manager application, which is actually
+your first programming assignment.
+
+55
+00:03:32,710 --> 00:03:33,420
+We'll talk about that.
+
+56
+00:03:33,420 --> 00:03:36,890
+And then we'll also talk about a
+concurrent ping-pong application, and I'll
+
+57
+00:03:36,890 --> 00:03:41,060
+show you the code for that, which uses
+semaphores in a slightly different way.
+
+58
+00:03:43,790 --> 00:03:45,660
+So let's take a look at a simple example.
+
+59
+00:03:45,660 --> 00:03:51,440
+So consider some kind of image-rendering
+application that uses a pool of threads to
+
+60
+00:03:51,440 --> 00:03:56,710
+process different parts of the images
+concurrently on multiple cores.
+
+61
+00:03:56,710 --> 00:03:59,260
+That's what the apples here are.
+
+62
+00:03:59,260 --> 00:04:00,280
+These are cores.
+
+63
+00:04:00,280 --> 00:04:02,180
+That's the intent of the image there.
+
+64
+00:04:03,300 --> 00:04:05,770
+So we're going to configure
+the application to restrict the number of
+
+65
+00:04:05,770 --> 00:04:08,960
+threads that can run concurrently
+on the processor cores to avoid
+
+66
+00:04:08,960 --> 00:04:13,990
+taking all the cores on the device for
+image processing and saving a few for
+
+67
+00:04:13,990 --> 00:04:18,520
+other things like email or web browsing or
+watching videos or whatever.
+
+68
+00:04:18,520 --> 00:04:22,410
+So for sake of argument, we'll say that
+we're only going to allow two cores
+
+69
+00:04:22,410 --> 00:04:25,090
+to enable the rest of
+the system to be responsive.
+
+70
+00:04:25,090 --> 00:04:26,330
+So even though there are four cores,
+
+71
+00:04:26,330 --> 00:04:29,180
+we're only going to allow two
+to be used for image processing.
+
+72
+00:04:29,180 --> 00:04:31,671
+So in that case, we would create
+a semaphore, a counting semaphore,
+
+73
+00:04:31,671 --> 00:04:32,400
+with a count of two.
+
+74
+00:04:33,420 --> 00:04:38,020
+And a permit has to be acquired from
+the semaphore before the thread can run.
+
+75
+00:04:38,020 --> 00:04:40,560
+And so in this case,
+one thread comes along,
+
+76
+00:04:40,560 --> 00:04:45,850
+it acquires a permit, the semaphore
+account is decremented by one.
+
+77
+00:04:45,850 --> 00:04:48,110
+Another thread comes along,
+it acquires a permit,
+
+78
+00:04:48,110 --> 00:04:49,610
+the semaphore account
+is decremented by one.
+
+79
+00:04:49,610 --> 00:04:54,530
+But any other threads that come
+along while the count is zero or
+
+80
+00:04:54,530 --> 00:04:59,660
+less need to block until one of
+the other threads releases the permit.
+
+81
+00:04:59,660 --> 00:05:04,350
+So if another thread releases the permit,
+then another thread can take it and
+
+82
+00:05:04,350 --> 00:05:04,870
+start to run.
+
+83
+00:05:05,870 --> 00:05:10,230
+This is an example of a so-called
+fully-bracketed model of acquiring and
+
+84
+00:05:10,230 --> 00:05:12,386
+releasing permits to a semaphore.
+
+85
+00:05:12,386 --> 00:05:14,200
+And in a fully-bracketed model,
+
+86
+00:05:14,200 --> 00:05:18,790
+the thread that acquires the semaphore
+is also the thread to release it.
+
+87
+00:05:18,790 --> 00:05:24,480
+There are other models as well where
+instead of having fully-bracketed models,
+
+88
+00:05:24,480 --> 00:05:27,650
+you can have a model where the thread
+that acquires a semaphore is
+
+89
+00:05:27,650 --> 00:05:28,840
+not the thread to release it.
+
+90
+00:05:28,840 --> 00:05:31,722
+And we'll see an example of that later
+when we talk about the concurrent
+
+91
+00:05:31,722 --> 00:05:32,470
+ping-pong application.
+
+92
+00:05:32,470 --> 00:05:38,800
+There's a number of interesting
+human known uses of semaphores.
+
+93
+00:05:38,800 --> 00:05:42,840
+My favorite actually came from some
+experience that I had when I was at
+
+94
+00:05:42,840 --> 00:05:46,760
+the University of California Irvine
+as a graduate student.
+
+95
+00:05:46,760 --> 00:05:52,030
+And in those days, we had a situation
+where we wanted to spend all of our time
+
+96
+00:05:52,030 --> 00:05:54,210
+playing volleyball at the beach.
+
+97
+00:05:54,210 --> 00:05:57,710
+So there would be volleyball
+courts at the beach, and
+
+98
+00:05:57,710 --> 00:06:00,310
+invariably there would always
+be more people, more teams,
+
+99
+00:06:00,310 --> 00:06:04,590
+who wanted to play volleyball than there
+were courts available to play volleyball.
+
+100
+00:06:04,590 --> 00:06:09,670
+So the way it worked was that we
+had a bag of beach volleyballs and
+
+101
+00:06:09,670 --> 00:06:13,670
+there was one volleyball for
+every court that was available.
+
+102
+00:06:13,670 --> 00:06:16,160
+And the protocol was that if
+a team wanted to play volleyball,
+
+103
+00:06:16,160 --> 00:06:20,610
+it would send somebody
+to the bag of balls.
+
+104
+00:06:20,610 --> 00:06:24,550
+And if there was a ball available in
+the bag of balls, then the person could
+
+105
+00:06:24,550 --> 00:06:27,730
+retrieve that and then their team
+could play on one of the courts.
+
+106
+00:06:27,730 --> 00:06:29,990
+If there was no ball in the bag of balls,
+
+107
+00:06:29,990 --> 00:06:34,060
+then the person had to wait until one
+of the other teams, pair of teams,
+
+108
+00:06:34,060 --> 00:06:38,650
+finished, and then they would be obliged
+to return the ball back to the bag.
+
+109
+00:06:38,650 --> 00:06:41,840
+So as long as the number of courts
+available matched the number of
+
+110
+00:06:41,840 --> 00:06:44,750
+semaphores, or
+beach volleyballs in the bag,
+
+111
+00:06:44,750 --> 00:06:48,020
+then we had an easy way of being able to
+know whether you could play right away or
+
+112
+00:06:48,020 --> 00:06:51,350
+whether you had to wait until
+there was a court available.
+
+113
+00:06:51,350 --> 00:06:55,540
+So that was basically the way that we
+used semaphores to play volleyball
+
+114
+00:06:55,540 --> 00:06:56,350
+in grad school.
+
+115
+00:06:56,350 --> 00:06:59,980
+Let's take a look at Java semaphores.
+
+116
+00:06:59,980 --> 00:07:03,060
+Java semaphores are a variant
+of counting semaphores.
+
+117
+00:07:03,060 --> 00:07:05,810
+They have some interesting
+characteristics we'll talk about shortly.
+
+118
+00:07:05,810 --> 00:07:08,845
+You can read more about them here.
+
+119
+00:07:08,845 --> 00:07:12,925
+They don't actually implement any
+synchronization-related interfaces.
+
+120
+00:07:12,925 --> 00:07:18,654
+Unlike other mechanisms in Java,
+synchronizers like Java CountDownLatches
+
+121
+00:07:18,654 --> 00:07:23,253
+or Java ReentrantLocks or
+ReentrantReadWriteLocks or so on,
+
+122
+00:07:23,253 --> 00:07:28,825
+the semaphores don't implement
+synchronization-related interfaces.
+
+123
+00:07:30,090 --> 00:07:34,770
+Under the hood, they apply a pattern
+from the so-called Gang of Four book,
+
+124
+00:07:34,770 --> 00:07:38,740
+the design pattern catalog,
+which you can read about on the FAQ.
+
+125
+00:07:38,740 --> 00:07:41,065
+And they applied the pattern
+called the bridge pattern,
+
+126
+00:07:41,065 --> 00:07:42,525
+which you can read more about here.
+
+127
+00:07:42,525 --> 00:07:47,000
+The bridge pattern essentially
+decouples an interface from multiple
+
+128
+00:07:47,000 --> 00:07:52,002
+implementations, and it's used in
+the context of semaphore to allow fair and
+
+129
+00:07:52,002 --> 00:07:56,958
+non-fair semantics of the semaphore to
+be supported by a common interface.
+
+130
+00:07:56,958 --> 00:08:00,769
+And we'll talk more about
+that in just a minute.
+
+131
+00:08:00,769 --> 00:08:02,059
+Here's how this works.
+
+132
+00:08:02,059 --> 00:08:09,600
+There's a private field called Sync, which
+is an instance of base class called Sync.
+
+133
+00:08:09,600 --> 00:08:10,910
+Kind of a funny name.
+
+134
+00:08:10,910 --> 00:08:14,376
+In the bridge pattern, that plays
+the role of the implementor hierarchy.
+
+135
+00:08:14,376 --> 00:08:18,910
+Then there's a, subclass,
+
+136
+00:08:18,910 --> 00:08:23,420
+the subclass sync as an abstract
+class extends a class in Java called
+
+137
+00:08:23,420 --> 00:08:26,610
+AbstractQueuedSynchronizer, which
+you can read about here.
+
+138
+00:08:26,610 --> 00:08:31,339
+The AbstractQueuedSynchronizer is
+a framework that's used by many
+
+139
+00:08:31,339 --> 00:08:35,290
+synchronizers in java,
+javautil.concurrent so.
+
+140
+00:08:35,290 --> 00:08:38,890
+ReentrantLock, ReentrantReadWriteLock,
+Semaphore,
+
+141
+00:08:38,890 --> 00:08:43,610
+Countdown latches a bunch of things
+that use abstract queued synchronizer to
+
+142
+00:08:43,610 --> 00:08:47,540
+basically coordinate FIFO
+access to some count.
+
+143
+00:08:47,540 --> 00:08:50,530
+In this case it would
+be the semaphore count.
+
+144
+00:08:50,530 --> 00:08:55,530
+So the sync class is the base class or
+the super class.
+
+145
+00:08:55,530 --> 00:09:00,458
+And then we have a couple of sub
+classes called fair sync and
+
+146
+00:09:00,458 --> 00:09:02,276
+non fair sync [NOISE].
+
+147
+00:09:02,276 --> 00:09:04,320
+And we'll see how those
+are used in a second.
+
+148
+00:09:05,370 --> 00:09:09,567
+The fair and non-fair sync are used
+to implement either a fair or
+
+149
+00:09:09,567 --> 00:09:12,680
+non-fair lock acquisition model.
+
+150
+00:09:12,680 --> 00:09:14,650
+So, by default, you have,
+
+151
+00:09:14,650 --> 00:09:17,280
+by default this is the default
+semaphore up here, this one.
+
+152
+00:09:17,280 --> 00:09:20,000
+The one that just has one
+parameter called permits.
+
+153
+00:09:20,000 --> 00:09:24,430
+By default, the Semaphore uses what's
+called non-fair sync semantics,
+
+154
+00:09:24,430 --> 00:09:29,345
+which means that it's up to the hardware
+and the virtual machine to pick, whichever
+
+155
+00:09:29,345 --> 00:09:34,570
+Semaphore will be whichever thread
+that's waiting will be released when and
+
+156
+00:09:34,570 --> 00:09:38,260
+given the chance to acquire a Semaphore
+whenever the Semaphore is released.
+
+157
+00:09:38,260 --> 00:09:42,540
+That's non-fair, and it's meant
+to optimize hardware performance.
+
+158
+00:09:42,540 --> 00:09:45,950
+Then there's also something
+called FairSync, and
+
+159
+00:09:45,950 --> 00:09:50,610
+if you use this version of the Semaphore,
+the one that takes the fair parameter,
+
+160
+00:09:50,610 --> 00:09:55,460
+then if fair is set to true, then
+the FairSync semantics will be selected.
+
+161
+00:09:55,460 --> 00:09:59,560
+And FairSync basically allows for the,
+
+162
+00:10:00,730 --> 00:10:05,880
+basically FIFO access to the semaphore
+values by waiting threads.
+
+163
+00:10:05,880 --> 00:10:08,790
+So whichever thread has been waiting
+the longest will be the one that
+
+164
+00:10:08,790 --> 00:10:13,180
+will be released next when
+a thread releases the semaphore.
+
+165
+00:10:13,180 --> 00:10:17,770
+So the thread that's been waiting the
+longest will acquire the 7411 is released
+
+166
+00:10:18,810 --> 00:10:22,810
+and there's a bunch of trade offs there
+that we'll talk about in a little bit.
+
+167
+00:10:22,810 --> 00:10:28,130
+The bottom line is that the not fair or
+non-fair sync semantics are much
+
+168
+00:10:28,130 --> 00:10:33,390
+more efficient than the point of view of
+releasing the waiting threads quickly,
+
+169
+00:10:33,390 --> 00:10:36,790
+whereas the fair sync semantics
+are not as efficient, but
+
+170
+00:10:36,790 --> 00:10:41,510
+they give you FIFO ordering, which means
+you don't have to worry about starvation.
+
+171
+00:10:41,510 --> 00:10:45,180
+Which is a problem where one thread
+never gets the semaphore, or
+
+172
+00:10:45,180 --> 00:10:48,340
+doesn't get the semaphore for a long time
+because it's always given to someone else.
+
+173
+00:10:50,410 --> 00:10:54,260
+Turns out that there's other parts of Java
+synchronizers that use a similar model and
+
+174
+00:10:54,260 --> 00:10:57,760
+use a similar pattern,
+like the Java ReentrantLock, for example.
+
+175
+00:10:57,760 --> 00:11:00,869
+And the Java ReentrantReadWriteLock.
+
+176
+00:11:00,869 --> 00:11:05,200
+The constructors create a semaphore
+with a given number of permits, so
+
+177
+00:11:05,200 --> 00:11:09,660
+you can see here that you can
+give the permit count, and
+
+178
+00:11:09,660 --> 00:11:14,440
+the count is not a maximum,
+it's just an initial value.
+
+179
+00:11:14,440 --> 00:11:17,510
+So you could actually
+have the count go above
+
+180
+00:11:17,510 --> 00:11:21,680
+the permit count that's given to
+the constructor, that's perfectly legal.
+
+181
+00:11:21,680 --> 00:11:25,570
+But the original count is just
+the default starting point.
+
+182
+00:11:25,570 --> 00:11:28,860
+And ironically the permanent
+value can actually be negative.
+
+183
+00:11:28,860 --> 00:11:32,340
+You can actually get a minus one or
+a minus two, or whatever,
+
+184
+00:11:32,340 --> 00:11:34,810
+some negative number as the permit count.
+
+185
+00:11:34,810 --> 00:11:40,440
+And only until the permit is
+released that number of times will
+
+186
+00:11:40,440 --> 00:11:43,080
+the waiting threads be
+able to make progress.
+
+187
+00:11:43,080 --> 00:11:46,280
+And this is typically used to
+coordinate the order in which,
+
+188
+00:11:46,280 --> 00:11:48,250
+the time that which threads start to run.
+
+189
+00:11:50,220 --> 00:11:52,730
+Let's talk a bit more about some
+other methods in Semaphore.
+
+190
+00:11:52,730 --> 00:11:55,900
+There's a bunch of methods that
+are part of the public interface
+
+191
+00:11:55,900 --> 00:11:57,690
+which includes acquire.
+
+192
+00:11:57,690 --> 00:12:00,860
+Acquire uninterruptibly,
+try acquire, and release.
+
+193
+00:12:01,900 --> 00:12:06,770
+And all these methods simply forward to
+the implementation or implementer methods
+
+194
+00:12:06,770 --> 00:12:09,120
+that are defined as part of the bridge
+pattern implementer hierarchy.
+
+195
+00:12:10,310 --> 00:12:12,500
+So here's an example of acquire.
+
+196
+00:12:12,500 --> 00:12:16,420
+Acquire obtains a single
+permit from the semaphore.
+
+197
+00:12:16,420 --> 00:12:18,640
+And it will block until one is available.
+
+198
+00:12:18,640 --> 00:12:23,190
+And under the hood it's implementation
+calls aquireSharedInterruptibly(1).
+
+199
+00:12:23,190 --> 00:12:27,540
+And that uses the abstract
+cued synchronizer framework to
+
+200
+00:12:27,540 --> 00:12:29,070
+basically get it one permit.
+
+201
+00:12:31,000 --> 00:12:34,160
+AcquireUninterruptibly does
+much the same thing.
+
+202
+00:12:34,160 --> 00:12:39,800
+But unlike acquire, acquireUninterruptibly
+will ignore interrupts.
+
+203
+00:12:39,800 --> 00:12:45,510
+If an interrupt occurs, then it simply
+going to be ignored and it'll continue
+
+204
+00:12:45,510 --> 00:12:48,635
+to block until the interrupt is
+[INAUDIBLE] semaphore's available.
+
+205
+00:12:48,635 --> 00:12:52,540
+TryAcquire() is used to obtain a permit,
+
+206
+00:12:52,540 --> 00:12:56,180
+if one is available when you
+invoke the tryAcquire() method.
+
+207
+00:12:56,180 --> 00:12:58,190
+It's basically a conditional acquire.
+
+208
+00:12:58,190 --> 00:13:02,130
+If there's no semaphore available,
+then it returns false.
+
+209
+00:13:02,130 --> 00:13:04,424
+If there is a semaphore available,
+it gets it right away.
+
+210
+00:13:04,424 --> 00:13:09,584
+And ironically, the non-timed tryAcquire()
+
+211
+00:13:09,584 --> 00:13:14,460
+doesn't honor, the fairness setting.
+
+212
+00:13:14,460 --> 00:13:17,700
+It'll just go ahead and barge in, and
+
+213
+00:13:17,700 --> 00:13:21,510
+take the semaphore even if there's
+other waiters that are blocked.
+
+214
+00:13:21,510 --> 00:13:24,090
+If you want to have a tryAcquire()
+that doesn't work that way,
+
+215
+00:13:24,090 --> 00:13:26,430
+you can use the timed tryAquire()
+that we'll talk about later.
+
+216
+00:13:27,670 --> 00:13:32,930
+Release returns a permit and it increases
+the count of the semaphore by one.
+
+217
+00:13:32,930 --> 00:13:36,430
+And you can see again it just
+forwards to the underlying
+
+218
+00:13:36,430 --> 00:13:39,420
+abstract queue synchronizer
+framework to release one semaphore.
+
+219
+00:13:41,155 --> 00:13:44,415
+It's valid for the permit count to
+exceed the initial permit count.
+
+220
+00:13:44,415 --> 00:13:45,685
+That's not a problem.
+
+221
+00:13:45,685 --> 00:13:48,565
+Moreover, it's also,
+as I mentioned before possible for
+
+222
+00:13:48,565 --> 00:13:52,695
+the, the value of a semaphore
+to be negative initially.
+
+223
+00:13:52,695 --> 00:13:56,945
+And, and all that means is that until
+someone calls release enough times for
+
+224
+00:13:56,945 --> 00:13:59,400
+the value to become greater then zero,
+
+225
+00:13:59,400 --> 00:14:02,830
+anybody who's trying to acquire
+this Semaphore will have to wait.
+
+226
+00:14:02,830 --> 00:14:06,180
+So that's what a negative value means,
+as the initial value.
+
+227
+00:14:06,180 --> 00:14:10,760
+So it just means that somebody has
+got to release enough times to
+
+228
+00:14:10,760 --> 00:14:15,610
+get the value over zero, in order for
+anybody to make forward progress.
+
+229
+00:14:15,610 --> 00:14:18,230
+And again, that's typically used for
+
+230
+00:14:18,230 --> 00:14:22,460
+things like test programs to
+start up a bunch of threads.
+
+231
+00:14:22,460 --> 00:14:26,556
+And then they all wait to acquire
+the Semaphores, and then they go ahead and
+
+232
+00:14:26,556 --> 00:14:27,409
+release them.
+
+233
+00:14:30,360 --> 00:14:33,290
+Okay, so let's go ahead and
+continue discussing.
+
+234
+00:14:33,290 --> 00:14:36,690
+There's actually a whole pile
+of other Semaphore methods.
+
+235
+00:14:36,690 --> 00:14:41,680
+There's acquire [NOISE], and
+acquire uninterruptedly.
+
+236
+00:14:41,680 --> 00:14:47,010
+TryAcquire and release, all of which
+take different numbers of permits.
+
+237
+00:14:47,010 --> 00:14:51,282
+So you can see here, you can
+actually block to acquire n-permits
+
+238
+00:14:51,282 --> 00:14:56,017
+like where N is three, or five, or
+ten, or whatever that number is, and
+
+239
+00:14:56,017 --> 00:14:59,067
+you'll only return when
+all N are available.
+
+240
+00:14:59,067 --> 00:15:03,047
+In contrast, by default acquire and
+release acquire or
+
+241
+00:15:03,047 --> 00:15:04,919
+release a single permit.
+
+242
+00:15:04,919 --> 00:15:09,600
+And then there's also methods
+that will be timed out.
+
+243
+00:15:09,600 --> 00:15:14,760
+They will do conditional acquisition of
+semaphores, but they'll only block for
+
+244
+00:15:14,760 --> 00:15:15,980
+a certain amount of time.
+
+245
+00:15:15,980 --> 00:15:18,600
+And if they don't get the semaphore in
+that amount of time, or the number of
+
+246
+00:15:18,600 --> 00:15:22,030
+semaphores they request in that amount
+of time, then they go ahead and return.
+
+247
+00:15:24,140 --> 00:15:28,395
+So here's a good time to talk about
+what happens if you need more than one
+
+248
+00:15:28,395 --> 00:15:33,120
+semaphore, so if you call
+acquire with a count of two, and
+
+249
+00:15:33,120 --> 00:15:35,690
+there's only one semaphore available,
+
+250
+00:15:35,690 --> 00:15:41,320
+then acquire will block until there
+are at least two semaphores available.
+
+251
+00:15:41,320 --> 00:15:45,618
+So that way you can make sure you get
+both semaphores before you return.
+
+252
+00:15:48,531 --> 00:15:52,312
+Ironically the timed tryAcquire() methods
+do honor the fairness setting, so
+
+253
+00:15:52,312 --> 00:15:53,822
+they don't actually barge in.
+
+254
+00:15:53,822 --> 00:15:57,997
+If you call a timed tryAcquire(),
+and there are other Semaphores that
+
+255
+00:15:57,997 --> 00:16:01,350
+are waiting, and
+the fairness semantics are set to fair,
+
+256
+00:16:01,350 --> 00:16:04,168
+Then you will simply wait
+at the end of the queue.
+
+257
+00:16:04,168 --> 00:16:08,970
+Either to get the semaphore or
+until your timeout period elapses.
+
+258
+00:16:11,020 --> 00:16:12,300
+Now as we talked about before,
+
+259
+00:16:12,300 --> 00:16:15,530
+the image processing example I mentioned
+before was an example where you're going
+
+260
+00:16:15,530 --> 00:16:21,220
+to have acquisition basically doing
+what's called a fully bracketed protocol.
+
+261
+00:16:21,220 --> 00:16:23,454
+The thread that acquires it,
+is the one that releases it.
+
+262
+00:16:23,454 --> 00:16:26,282
+But there are other situations
+where acquiring and
+
+263
+00:16:26,282 --> 00:16:30,430
+releasing permanence to a semaphore
+don't have to be fully bracketed.
+
+264
+00:16:30,430 --> 00:16:33,860
+So, we'll talk shortly about a ping
+pong example, where the ping and
+
+265
+00:16:33,860 --> 00:16:38,680
+the pong threads take turns
+printing ping or pong.
+
+266
+00:16:38,680 --> 00:16:42,980
+And they use basically binary
+semaphores in order to be able to
+
+267
+00:16:42,980 --> 00:16:45,010
+release each other in the proper order.
+
+268
+00:16:45,010 --> 00:16:48,989
+So semaphores can be used to coordinate
+the order in which things occur.
+
+269
+00:16:51,148 --> 00:16:53,650
+Speaking of which, let's go ahead and
+talk about this example.
+
+270
+00:16:53,650 --> 00:17:01,060
+So this is the ping pong example,
+you can go here to this link.
+
+271
+00:17:01,060 --> 00:17:04,690
+You'll find that all
+the examples in the slides
+
+272
+00:17:04,690 --> 00:17:09,400
+have a corresponding URL
+where you can find the code.
+
+273
+00:17:09,400 --> 00:17:15,950
+And so, that's where you would go to find
+it, this is the ping pong console example.
+
+274
+00:17:15,950 --> 00:17:18,720
+And you'll see that sometimes the code
+
+275
+00:17:18,720 --> 00:17:21,580
+examples don't appear in
+the POSA-15 directory.
+
+276
+00:17:21,580 --> 00:17:23,700
+Sometimes they appear other places.
+
+277
+00:17:23,700 --> 00:17:27,090
+And rather than try to copy them
+around and keep them all in sync,
+
+278
+00:17:27,090 --> 00:17:30,860
+I just give the URL wherever can you
+find them in my GitHub repositories.
+
+279
+00:17:30,860 --> 00:17:32,300
+So they're always available.
+
+280
+00:17:32,300 --> 00:17:34,900
+They should always be noted on the slides,
+and
+
+281
+00:17:34,900 --> 00:17:38,310
+all you have to do is just click them
+when I upload the slides on the PDF.
+
+282
+00:17:39,420 --> 00:17:41,940
+So this particular
+application is kind of fun.
+
+283
+00:17:41,940 --> 00:17:44,891
+It coordinates thread interactions
+by a Java semaphores.
+
+284
+00:17:44,891 --> 00:17:48,977
+And in this case the threads alternate,
+putting Ping and Pong on the console.
+
+285
+00:17:48,977 --> 00:17:54,125
+So if things are done properly, when you
+run the program, it should say Ping(1),
+
+286
+00:17:54,125 --> 00:17:59,077
+Pong(1), Ping(2), Pong(2),
+Ping(3), Pong(3), and so on.
+
+287
+00:17:59,077 --> 00:18:03,610
+And then the numbers here are basically
+the iterations that are taking place.
+
+288
+00:18:03,610 --> 00:18:06,332
+If you don't do this correctly,
+then it'll say all the Pings first,
+
+289
+00:18:06,332 --> 00:18:10,090
+followed by all the Pongs, or
+it'll do them out of order or something.
+
+290
+00:18:10,090 --> 00:18:11,480
+So, that would be bad.
+
+291
+00:18:11,480 --> 00:18:14,040
+So we're going to use binary
+semaphores to make this all work.
+
+292
+00:18:15,160 --> 00:18:17,530
+Here are the various classes.
+
+293
+00:18:17,530 --> 00:18:21,090
+In this example, I'll first give you
+sort of an overview of the design, and
+
+294
+00:18:21,090 --> 00:18:23,900
+then we'll go and
+take a look at the Implementation.
+
+295
+00:18:25,010 --> 00:18:29,180
+So, we have a java class
+called PlayPingPong,
+
+296
+00:18:29,180 --> 00:18:33,820
+which is going to have a nested
+PingPongThread inside of it.
+
+297
+00:18:33,820 --> 00:18:39,050
+And PlayPingPong has a constructor
+that takes the number
+
+298
+00:18:39,050 --> 00:18:43,780
+of iterations to run, and it has a run()
+method so it's going to be its own thread.
+
+299
+00:18:43,780 --> 00:18:50,030
+And you go ahead and run this thing, and
+the run() method here will go ahead and
+
+300
+00:18:50,030 --> 00:18:52,595
+create a couple of PingPongThreads.
+
+301
+00:18:53,910 --> 00:18:59,052
+And those PingPongThreads will be used
+in order to actually run the protocol
+
+302
+00:18:59,052 --> 00:19:04,840
+to play ping-pong by taking turns
+acquiring and releasing the semaphore.
+
+303
+00:19:04,840 --> 00:19:06,030
+And there's actually two semaphores.
+
+304
+00:19:06,030 --> 00:19:08,340
+There's a first semaphore and
+a second semaphore.
+
+305
+00:19:08,340 --> 00:19:12,890
+And the threads take turns, basically
+acquiring and releasing the semaphore,
+
+306
+00:19:12,890 --> 00:19:16,000
+in order to get the alternating
+printing behavior that we need here.
+
+307
+00:19:17,180 --> 00:19:18,200
+We also have a couple other things.
+
+308
+00:19:18,200 --> 00:19:20,850
+We have an Options() class that
+controls stuff like the number of
+
+309
+00:19:20,850 --> 00:19:22,800
+iterations to run.
+
+310
+00:19:22,800 --> 00:19:25,560
+And we also have a Main program that
+makes an instance of PlayPingPong.
+
+311
+00:19:27,110 --> 00:19:30,978
+Here's an interaction diagram that
+illustrates basically how this works.
+
+312
+00:19:30,978 --> 00:19:34,939
+The main program starts to run and
+when it's run,
+
+313
+00:19:34,939 --> 00:19:38,652
+it goes ahead and it creates a ping.
+
+314
+00:19:38,652 --> 00:19:44,920
+A PingPongThread for the ping object and
+a PingPong instance called pong.
+
+315
+00:19:44,920 --> 00:19:47,170
+So we have ping and pong.
+
+316
+00:19:47,170 --> 00:19:48,600
+Both of these are threads.
+
+317
+00:19:48,600 --> 00:19:51,630
+So we go ahead and
+create them and start them.
+
+318
+00:19:51,630 --> 00:19:56,360
+And when they start to run,
+they take turns doing the following.
+
+319
+00:19:56,360 --> 00:20:01,330
+The ping thread will first
+acquire the first semaphore,
+
+320
+00:20:01,330 --> 00:20:06,330
+it will then print Ping, and
+it will then release the second semaphore.
+
+321
+00:20:06,330 --> 00:20:10,840
+And, the pong thread will block
+acquiring the second semaphore, and
+
+322
+00:20:10,840 --> 00:20:14,910
+it will print Pong, and
+then it will release the first semaphore.
+
+323
+00:20:14,910 --> 00:20:18,530
+So you'll see that these are going to
+alternate going back and forth.
+
+324
+00:20:18,530 --> 00:20:19,090
+Acquiring or
+
+325
+00:20:19,090 --> 00:20:23,040
+releasing each other's semaphore in order
+to get the correct alternate behavior.
+
+326
+00:20:24,360 --> 00:20:28,632
+And so the semaphores here, are used to
+coordinate the order in which ping and
+
+327
+00:20:28,632 --> 00:20:30,200
+pong are called.
+
+328
+00:20:30,200 --> 00:20:31,352
+And as we'll see,
+
+329
+00:20:31,352 --> 00:20:36,510
+they're going to use basically counting
+semaphores with a count of zero or one.
+
+330
+00:20:36,510 --> 00:20:38,878
+And they're going to
+take turns doing that.
+
+331
+00:20:38,878 --> 00:20:41,120
+The main thread of
+control will simply wait
+
+332
+00:20:42,130 --> 00:20:47,130
+to do a various synchronization to join
+on the exiting of the other two threads.
+
+333
+00:20:47,130 --> 00:20:49,660
+So, when the other two threads,
+the ping thread and
+
+334
+00:20:49,660 --> 00:20:52,150
+the pong thread exit,
+then the main thread will join.
+
+335
+00:20:53,340 --> 00:20:57,540
+And once they're joined,
+then the program will go ahead and exit.
+
+336
+00:20:58,800 --> 00:21:01,502
+So let's take a look at the code here.
+
+337
+00:21:01,502 --> 00:21:07,089
+Let me go ahead and
+bring up another slide,
+
+338
+00:21:07,089 --> 00:21:11,602
+and we will take a look at the code.
+
+339
+00:21:11,602 --> 00:21:15,560
+Let's see, I'm going to go ahead and
+share my Emax window.
+
+340
+00:21:18,650 --> 00:21:24,406
+All right, so we go over here to POSA-15,
+
+341
+00:21:24,406 --> 00:21:29,260
+examples, PingPong, and console.
+
+342
+00:21:29,260 --> 00:21:31,990
+So here's the actual code for
+this program.
+
+343
+00:21:31,990 --> 00:21:36,420
+This is just a simple Java application,
+it's not an Android application.
+
+344
+00:21:36,420 --> 00:21:38,760
+But we also have Android versions
+of this code as well, but
+
+345
+00:21:38,760 --> 00:21:39,830
+we'll talk about that later.
+
+346
+00:21:40,960 --> 00:21:43,640
+So, here's the main program,
+as you can see it's very simple.
+
+347
+00:21:43,640 --> 00:21:50,310
+The main program goes ahead and
+initializes the options singleton.
+
+348
+00:21:50,310 --> 00:21:55,060
+So you can have command line arguments
+that will influence how the program runs.
+
+349
+00:21:55,060 --> 00:21:58,570
+It then creates a PlayPingPong object,
+
+350
+00:21:58,570 --> 00:22:01,900
+with the appropriate given
+number of iterations.
+
+351
+00:22:01,900 --> 00:22:08,940
+And then this pingPong object is passed
+to a new thread because it's a runnable.
+
+352
+00:22:08,940 --> 00:22:13,490
+And we start that thread, and that will
+call the run hook method on PlayPingPong,
+
+353
+00:22:13,490 --> 00:22:15,250
+which is a runnable.
+
+354
+00:22:15,250 --> 00:22:16,930
+So let's go look at PlayPingPong.
+
+355
+00:22:16,930 --> 00:22:18,706
+Here's class PlayPingPong.
+
+356
+00:22:18,706 --> 00:22:20,620
+This implements Runnable.
+
+357
+00:22:20,620 --> 00:22:24,400
+It keeps track of the number of iterations
+to alternate pinging and ponging.
+
+358
+00:22:25,420 --> 00:22:28,668
+It has a nested static class
+called PingPongThread.
+
+359
+00:22:28,668 --> 00:22:31,005
+I could've moved this
+class to it's own file but
+
+360
+00:22:31,005 --> 00:22:33,650
+I just wanted to keep this example simple.
+
+361
+00:22:33,650 --> 00:22:36,350
+It doesn't really matter,
+in this case it's fairly concise.
+
+362
+00:22:38,470 --> 00:22:41,282
+So PingPongThread extends Thread,
+
+363
+00:22:41,282 --> 00:22:45,915
+then it keeps track of the number
+of iterations to PingPong.
+
+364
+00:22:45,915 --> 00:22:49,607
+It keeps track of the string,
+whether we're going to ping or pong.
+
+365
+00:22:49,607 --> 00:22:55,795
+And it keeps track of the pair of
+semaphores, firstSema and secondSema.
+
+366
+00:22:55,795 --> 00:22:59,325
+After, it goes ahead and
+initializes those fields.
+
+367
+00:22:59,325 --> 00:23:02,125
+And then when acquire() is called,
+
+368
+00:23:02,125 --> 00:23:06,502
+It will acquire the first
+semaphore uninterruptibly, and
+
+369
+00:23:06,502 --> 00:23:12,180
+when release() is called,
+it will release the second semaphore.
+
+370
+00:23:12,180 --> 00:23:17,370
+So notice that it's going to wait on one
+semaphore, and then release the other.
+
+371
+00:23:17,370 --> 00:23:19,440
+And that's how we're going to
+get the ping pong behavior.
+
+372
+00:23:20,870 --> 00:23:25,308
+Here's the run() method,
+the run() method just loops for
+
+373
+00:23:25,308 --> 00:23:30,247
+i equals 1, <= nMaxIterations,
+and every time through the loop,
+
+374
+00:23:30,247 --> 00:23:35,710
+it calls acquire() to get a semaphore for,
+it then prints out ping or pong.
+
+375
+00:23:35,710 --> 00:23:39,460
+And then it releases the other
+semaphore so that semaphore can run.
+
+376
+00:23:39,460 --> 00:23:45,530
+And then it loops back around again and
+waits to acquire its semaphore again.
+
+377
+00:23:47,490 --> 00:23:48,260
+Here's the constructor.
+
+378
+00:23:48,260 --> 00:23:50,050
+It just sets nMaxIterations.
+
+379
+00:23:50,050 --> 00:23:52,795
+And here's the run()
+method of PlayPingPong.
+
+380
+00:23:52,795 --> 00:23:55,973
+So what this does,
+is it creates a pair of semaphores.
+
+381
+00:23:55,973 --> 00:24:00,857
+The pingSema starts out unlocked,
+because it has a count of 1.
+
+382
+00:24:00,857 --> 00:24:04,675
+And the pong semaphore starts out locked,
+because it has a count of zero.
+
+383
+00:24:04,675 --> 00:24:07,368
+And so
+what that means is that the ping thread,
+
+384
+00:24:07,368 --> 00:24:12,134
+when it goes to acquire the semaphore,
+will find that it's going to be unlocked,
+
+385
+00:24:12,134 --> 00:24:14,320
+so it'll get a chance to go.
+
+386
+00:24:14,320 --> 00:24:17,900
+But when the pong thread goes
+to acquire its semaphore,
+
+387
+00:24:17,900 --> 00:24:20,390
+it's going to find it's got a value
+of zero, so it's going to block.
+
+388
+00:24:21,550 --> 00:24:23,237
+Here's how we create those two threads.
+
+389
+00:24:23,237 --> 00:24:24,059
+Here's pingThread.
+
+390
+00:24:24,059 --> 00:24:25,720
+Here's pongThread.
+
+391
+00:24:25,720 --> 00:24:30,540
+They both are instances of PingPongThread
+where you give the max iterations that
+
+392
+00:24:30,540 --> 00:24:31,840
+you want to loop.
+
+393
+00:24:31,840 --> 00:24:34,880
+You get the string to print ping or
+pong, and
+
+394
+00:24:34,880 --> 00:24:39,220
+then you give the ping semaphore first,
+in the case of the ping thread, and
+
+395
+00:24:39,220 --> 00:24:42,560
+the pong semaphore second,
+in the case of the ping thread.
+
+396
+00:24:42,560 --> 00:24:43,780
+And in the case of the pong thread,
+
+397
+00:24:43,780 --> 00:24:48,340
+you get the pong semaphore first,
+followed by the ping semaphore.
+
+398
+00:24:48,340 --> 00:24:50,840
+And that means that
+the pingThread always starts.
+
+399
+00:24:51,900 --> 00:24:53,640
+We then go ahead and start both threads.
+
+400
+00:24:55,070 --> 00:24:56,659
+Those threads go off and run.
+
+401
+00:24:56,659 --> 00:24:58,516
+And then the main thread,
+not the main thread.
+
+402
+00:24:58,516 --> 00:25:03,891
+The thread that's running here, the
+PlayPingPong object thread, would go ahead
+
+403
+00:25:03,891 --> 00:25:09,997
+and wait for both ping and pong threads to
+exit, so it does joins on both of them.
+
+404
+00:25:09,997 --> 00:25:13,387
+And when it's all done, we print
+the fact that we're done and we exit.
+
+405
+00:25:14,607 --> 00:25:19,437
+So I encourage you to take a look at
+this program and see how it works.
+
+406
+00:25:19,437 --> 00:25:23,247
+It's a fun little example
+of how to use a semaphore.
+
+407
+00:25:23,247 --> 00:25:29,250
+And this particular example, as you can
+see, does not require full bracketing.
+
+408
+00:25:29,250 --> 00:25:34,040
+It will just go ahead and basically
+alternate printing ping and pong.
+
+409
+00:25:35,600 --> 00:25:36,660
+All right.
+
+410
+00:25:36,660 --> 00:25:40,463
+So let's go back and finish off our slides
+and then we'll take some questions.
+
+411
+00:25:40,463 --> 00:25:45,970
+So we're going to talk now about
+usage considerations for semaphores.
+
+412
+00:25:45,970 --> 00:25:50,440
+So semaphores are more flexible than
+some of the other Java synchronizers.
+
+413
+00:25:50,440 --> 00:25:54,710
+In particular, it's more flexible than the
+synchronized statements that we looked at
+
+414
+00:25:54,710 --> 00:25:56,840
+yesterday in the last class, and
+
+415
+00:25:56,840 --> 00:26:00,750
+it's also more flexible than
+the Java Reentrant Lock.
+
+416
+00:26:00,750 --> 00:26:04,030
+And one of the reasons why
+it's more flexible is because
+
+417
+00:26:04,030 --> 00:26:08,110
+it allows a non-fully-bracketed protocol.
+
+418
+00:26:08,110 --> 00:26:11,120
+In other words, one thread acquires,
+a different thread releases,
+
+419
+00:26:11,120 --> 00:26:14,360
+whereas the other synchronization
+mechanisms we just discussed,
+
+420
+00:26:14,360 --> 00:26:18,070
+synchronized statements and Reentrant
+Locks require fully-bracketed protocols.
+
+421
+00:26:18,070 --> 00:26:22,140
+So they're only good for
+certain kinds of serialization concerns.
+
+422
+00:26:23,950 --> 00:26:27,480
+Another thing you can do that's very
+flexible with Java synchronizers is you
+
+423
+00:26:27,480 --> 00:26:31,010
+can acquire and release multiple
+permits in a single operation.
+
+424
+00:26:32,820 --> 00:26:35,840
+You don't have to have the acquire and
+release methods be fully bracketed,
+
+425
+00:26:35,840 --> 00:26:36,600
+as we just talked about.
+
+426
+00:26:37,890 --> 00:26:43,680
+However, when you use them to manage
+access to resource pools, it's going
+
+427
+00:26:43,680 --> 00:26:49,140
+to track the number of free resources,
+not which resources are actually free.
+
+428
+00:26:49,140 --> 00:26:52,160
+And so that means you have
+to use some other mechanism,
+
+429
+00:26:52,160 --> 00:26:55,290
+such as a hash map or other semaphores or
+
+430
+00:26:55,290 --> 00:26:59,400
+whatever, in order to figure out
+which resource is actually available.
+
+431
+00:26:59,400 --> 00:27:01,240
+And we'll see some examples
+of that a little bit later.
+
+432
+00:27:02,740 --> 00:27:06,735
+Another issue with semaphores is they can
+be tedious and error-prone to program due
+
+433
+00:27:06,735 --> 00:27:10,350
+to common traps and pitfalls with
+using these low-level synchronizers.
+
+434
+00:27:10,350 --> 00:27:12,080
+For example,
+
+435
+00:27:12,080 --> 00:27:16,920
+one common mistake is to acquire
+a semaphore and then forget to release it.
+
+436
+00:27:16,920 --> 00:27:21,640
+And this sometimes happens if you have
+exceptions that get thrown inside blocks
+
+437
+00:27:21,640 --> 00:27:26,170
+of code and the exception handlers
+don't correctly release the resource,
+
+438
+00:27:26,170 --> 00:27:27,630
+the semaphore that was acquired.
+
+439
+00:27:27,630 --> 00:27:31,980
+So it's a good idea to get into the habit
+of using try-finally blocks to make sure
+
+440
+00:27:31,980 --> 00:27:35,440
+you always release semaphores or
+locks, even if an exception is thrown.
+
+441
+00:27:37,470 --> 00:27:40,985
+So here's an example where
+you could actually do this,
+
+442
+00:27:40,985 --> 00:27:44,375
+where you use a finally block in
+order to release the semaphore.
+
+443
+00:27:44,375 --> 00:27:47,915
+But the problem that we see here is that
+we're actually holding the semaphore for
+
+444
+00:27:47,915 --> 00:27:51,045
+a very long period of time, and we might
+be doing something that doesn't involve
+
+445
+00:27:51,045 --> 00:27:53,325
+the semaphore so
+it doesn't need to be held.
+
+446
+00:27:53,325 --> 00:27:57,295
+So holding a semaphore for an overly
+long time is another common problem.
+
+447
+00:27:57,295 --> 00:28:01,860
+And then another problem is releasing the
+semaphore more times than actually needed.
+
+448
+00:28:01,860 --> 00:28:04,830
+So here we acquire the semaphore and
+then we do multiple releases.
+
+449
+00:28:04,830 --> 00:28:07,210
+And that'll keep incrementing
+the account by one,
+
+450
+00:28:07,210 --> 00:28:11,520
+which may cause problems if that
+resource is not actually intended to be
+
+451
+00:28:11,520 --> 00:28:16,360
+accessible concurrently by that
+many simultaneous threads.
+
+452
+00:28:16,360 --> 00:28:19,260
+Sometimes calling multiple
+releases is perfectly fine.
+
+453
+00:28:19,260 --> 00:28:20,080
+Other times, it's a bug.
+
+454
+00:28:20,080 --> 00:28:23,570
+So you have to be very careful in
+how you reason about your program
+
+455
+00:28:23,570 --> 00:28:26,420
+in order to use these kinds of
+locking mechanisms correctly.
+

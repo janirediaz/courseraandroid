@@ -1,6 +1,6 @@
 package course.labs.locationlab;
 
-// Adapted from code found at:
+// Adapted from code found at: 
 // http://mobiarch.wordpress.com/2012/07/17/testing-with-mock-location-data-in-android/
 
 import android.content.Context;
