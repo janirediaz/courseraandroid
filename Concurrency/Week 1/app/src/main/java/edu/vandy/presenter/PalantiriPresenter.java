@@ -10,6 +10,7 @@ import android.util.Log;
 import edu.vandy.MVP;
 import edu.vandy.common.GenericModel;
 import edu.vandy.common.Utils;
+import edu.vandy.model.Palantir;
 import edu.vandy.model.PalantiriModel;
 import edu.vandy.utils.Options;
 import edu.vandy.view.DotArrayAdapter.DotColor;
@@ -268,6 +269,18 @@ public class PalantiriPresenter
         // perform the BeingRunnable logic, add them to the ArrayList,
         // and then start all the BeingThreads in the ArrayList.
         // TODO - You fill in here.
+        new ArrayList<>();
+        beginBeingsThreads(Options.instance().numberOfBeings());
+        beginBeingsThreads(0);
+        mBeingsThreads.size();
+        for(Palantir palantir : mBeingsThreads.clear()){
+            if(mBeingsThreads.get(PalantiriPresenter)){
+                mBeingsThreads.get(PalantiriPresenter, false);
+                return PalantiriPresenter;
+            }
+        }
+
+        return beingCount;
     }
 
     /**
