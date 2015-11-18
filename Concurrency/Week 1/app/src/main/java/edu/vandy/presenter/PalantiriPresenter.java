@@ -269,18 +269,17 @@ public class PalantiriPresenter
         // perform the BeingRunnable logic, add them to the ArrayList,
         // and then start all the BeingThreads in the ArrayList.
         // TODO - You fill in here.
-        new ArrayList<>();
-        beginBeingsThreads(Options.instance().numberOfBeings());
-        beginBeingsThreads(0);
-        mBeingsThreads.size();
-        for(Palantir palantir : mBeingsThreads.clear()){
-            if(mBeingsThreads.get(PalantiriPresenter)){
-                mBeingsThreads.get(PalantiriPresenter, false);
-                return PalantiriPresenter;
-            }
-        }
+        mBeingsThreads = new ArrayList<BeingThread>(beingCount);
+        for(int i=0; i< beingCount;i++) {
+            BeingRunnable br = new BeingRunnable(i, this);
+            BeingThread bt = new BeingThread(br, beingCount, this);
+            mBeingsThreads.add(bt);
 
-        return beingCount;
+        }
+        for(BeingThread bt : mBeingsThreads) {
+            bt.start();
+
+        }
     }
 
     /**
