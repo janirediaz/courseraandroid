@@ -3,6 +3,7 @@ package edu.vandy.presenter;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
 import android.content.Intent;
@@ -291,6 +292,13 @@ public class PalantiriPresenter
         // finish and then calls mView.get().done() to inform the View
         // layer that the simulation is done.
         // @@ TODO -- you fill in here.
+        mBeingsThreads = new ArrayList<BeingThread>();
+        CountDownLatch countDownLatch = new CountDownLatch(0);
+
+        for (int i = 0; i<countDownLatch; i++) {
+            waitForBeingsThreads() = new waitForBeingsThreads();
+            mBeingsThreads.add(beingAsyncTask);
+        }
     }
 
     /**
